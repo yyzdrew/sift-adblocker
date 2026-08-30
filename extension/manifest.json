@@ -6,8 +6,8 @@
 
   "browser_specific_settings": {
     "gecko": {
-      "id": "sift-adblocker@localhost",
-      "strict_min_version": "121.0"
+      "id": "sift-adblocker@yyzdrew.github.io",
+      "strict_min_version": "128.0"
     }
   },
 
@@ -47,6 +47,13 @@
       "js": ["content/generics.js", "content/cosmetic.js"],
       "run_at": "document_start",
       "all_frames": true
+    },
+    {
+      "matches": ["*://*.youtube.com/*", "*://*.youtube-nocookie.com/*"],
+      "js": ["content/scriptlets/yt-ads.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "MAIN"
     }
   ],
 

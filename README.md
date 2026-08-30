@@ -9,24 +9,48 @@ lookup.
 
 ---
 
-## Install it for testing
+## Install it
 
-Firefox will not permanently install an unsigned extension, so use the temporary
-add-on flow:
+### Permanently (recommended)
+
+Release Firefox refuses to permanently install an unsigned extension. Signing it
+on the **unlisted** channel fixes that — unlisted means it is signed for your own
+use, not published to the store and not reviewed:
+
+```sh
+py tools/sign.py
+```
+
+You need AMO API credentials once, from
+<https://addons.mozilla.org/developers/addon/api/key/>, saved as
+`.amo-credentials.json` in the project root (gitignored):
+
+```json
+{"issuer": "user:12345:67", "secret": "..."}
+```
+
+The script packages `extension/` into an `.xpi`, uploads it, waits for Mozilla to
+sign it, and writes the result to `dist/`. Install that file via
+**about:addons → gear icon → Install Add-on From File…**. It survives restarts.
+
+To ship an update, bump `version` in `extension/manifest.json` and run it again.
+
+### Temporarily, for development
+
+No signing, but it unloads when you quit Firefox:
 
 1. Open `about:debugging#/runtime/this-firefox`
 2. Click **Load Temporary Add-on…**
 3. Select **`extension/manifest.json`** (the file, not the folder)
 
-It stays loaded until you quit Firefox. To reload after editing, click **Reload**
-on its card. **Inspect** opens the background console, where every block is
-logged with the rule that matched.
+To reload after editing, click **Reload** on its card. **Inspect** opens the
+background console, where every block is logged with the rule that matched.
 
 > The manifest sets `browser_specific_settings.gecko.id`. Without it Firefox
 > hands a temporary add-on a **fresh ID on every reload**, which wipes
 > `storage.local` — you would lose your whitelist and counters each time.
 
-Requires **Firefox 121+** (see [Firefox notes](#firefox-notes) for why).
+Requires **Firefox 128+** (see [Firefox notes](#firefox-notes) for why).
 
 ---
 
@@ -42,6 +66,7 @@ Requires **Firefox 121+** (see [Firefox notes](#firefox-notes) for why).
 | **List management** | Versions, checksums, rule counts and a Refresh button |
 | **Cosmetic filtering** | Hostname-scoped EasyList selectors + 350 curated generics |
 | **Element collapsing** | Blocked images and iframes are hidden, not left as empty boxes |
+| **YouTube ad removal** | A MAIN-world scriptlet strips ad instructions from the player response |
 
 ---
 
@@ -128,6 +153,41 @@ instead extracts simple `#id`/`.class` selectors whose identifier contains a
 delimited ad token, so `ad-slot` qualifies and `gradient`, `download`, `badge`
 and `thread` do not, then ranks them by how canonical the name is.
 
+### Video ads: YouTube and Twitch
+
+These are the two hardest cases in ad blocking, and they fail for *different*
+reasons. Neither is a filter-list problem.
+
+**YouTube** serves ad video from `googlevideo.com/videoplayback` — the same
+endpoint as the real video. Ad and content segments are indistinguishable by URL,
+so blocking it either does nothing or kills playback. What works instead is
+removing the ad *instructions* before the player acts on them:
+`extension/content/scriptlets/yt-ads.js` runs in the page's own JS realm and
+strips `adPlacements`, `playerAds`, `adSlots` and `playerConfig.adPlacementConfig`
+out of the player response as it is parsed. Same "json-prune" technique uBlock
+Origin uses.
+
+It hooks three paths, because the response arrives by three routes:
+
+| Path | Why |
+|---|---|
+| `JSON.parse` | most player responses |
+| `Response.prototype.json` | `/youtubei/v1/player` is fetched, never touching `JSON.parse` |
+| `window.ytInitialPlayerResponse` | assigned by an inline script on the watch page |
+
+> **This will break.** It depends on the shape of YouTube's player response,
+> which they change without notice. When ads come back, the field names in
+> `AD_KEYS` are the first thing to check. `window.__siftYouTube` in the page
+> console reports how many fields were pruned.
+
+**Twitch is not solved, and is not solvable this way.** Twitch stitches ads into
+the HLS video stream **server-side** — the ad frames arrive inside the same `.ts`
+segments as the stream, from the same CDN host. There is no ad request to block
+and no ad metadata to prune. The extensions that do beat Twitch proxy the
+playlist request through a third-party server in a region that serves no ads,
+which means routing your viewing through someone else's infrastructure. That is a
+trust decision, not a technical one, so this project does not do it.
+
 ---
 
 ## Firefox notes
@@ -176,11 +236,16 @@ function onBeforeRequest(details) {
 `tests/test_extension.js` fires a known ad request before startup can plausibly
 have finished and asserts it is still blocked.
 
-### Why `strict_min_version: 121.0`
+### Why `strict_min_version: 128.0`
 
-MV3 shipped in Firefox 109, but before Firefox 121 the background page did not
-start reliably in all MV3 configurations. 121 is the first version this can
-depend on.
+Two independent floors:
+
+- **121** — MV3 shipped in Firefox 109, but before 121 the background page did
+  not start reliably in all MV3 configurations.
+- **128** — `"world": "MAIN"` for manifest content scripts, which the YouTube
+  scriptlet needs. Crucially, a MAIN-world content script is **not subject to the
+  page's CSP**, unlike injecting a `<script>` element. YouTube's CSP is strict,
+  so that exemption is what makes the scriptlet work at all.
 
 ---
 
@@ -202,7 +267,11 @@ Ad Blocker/
 │  │  ├─ matcher.js      pattern  ->  cheapest applicable test
 │  │  ├─ engine.js       request  ->  decision
 │  │  └─ url.js          hostname / registrable-domain helpers
-│  ├─ content/           cosmetic injection + element collapsing
+│  ├─ content/
+│  │  ├─ cosmetic.js     selector injection + element collapsing
+│  │  ├─ generics.js     curated generic selectors (generated)
+│  │  └─ scriptlets/
+│  │     └─ yt-ads.js    YouTube ad pruning, MAIN world
 │  ├─ popup/  options/   UI
 │  ├─ filters/           vendored EasyList + EasyPrivacy snapshots
 │  └─ icons/
@@ -225,6 +294,8 @@ py tools/update_lists.py --check    # report staleness, write nothing
 py tools/build_generics.py          # regenerate the curated generic selectors
 py tools/build_icons.py             # regenerate the icon set
 py tools/run_tests.py               # run the test suite headlessly
+py tools/sign.py                    # package + sign via AMO (permanent install)
+py tools/sign.py --package-only     # just build the .xpi, no network
 ```
 
 `update_lists.py` only *fetches*. Parsing stays in `lib/parser.js` so there is
@@ -237,7 +308,7 @@ py tools/run_tests.py                     # headless, exits non-zero on failure
 py tools/run_tests.py --keep-open         # serve, then open the URL yourself
 ```
 
-116 tests. They run in a real browser because that is where the code runs;
+130 tests. They run in a real browser because that is where the code runs;
 results are POSTed back to the runner rather than scraped, since Chrome's
 `--virtual-time-budget` freezes `performance.now()` and would report every
 benchmark as 0 ms.
@@ -289,8 +360,9 @@ Being straight about it: this genuinely blocks ads, but uBO is a decade of work.
 
 **Substantial gaps**
 
-- **No scriptlet injection** (`#$#`). uBO's snippets neutralise anti-adblock
-  walls and inline ad loaders. Sites that detect blockers will beat this.
+- **Scriptlet injection is YouTube-only.** There is a working MAIN-world
+  scriptlet for YouTube, but no general `#$#` snippet engine and no library of
+  them. Anti-adblock walls on other sites will still win.
 - **No procedural cosmetic filters** (`:has-text`, `:xpath`, `:upward`). Modern
   EasyList leans on these for ads plain CSS cannot target. 282 such rules in
   EasyList are currently skipped.
@@ -299,6 +371,7 @@ Being straight about it: this genuinely blocks ads, but uBO is a decade of work.
   we blocked cleanly — there is no stub to hand them.
 - **No `$csp`, `$removeparam`, `$replace`, or header filtering.**
 - **No popup blocking**, per the omission above.
+- **Twitch video ads**, for the structural reason above.
 
 **Moderate gaps**
 

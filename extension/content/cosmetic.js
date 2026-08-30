@@ -58,7 +58,15 @@
       if (!res || res.error) return;
 
       if (!res.active || !res.allowGenerics) removeGenerics();
-      if (!res.active) return;
+
+      if (!res.active) {
+        // MAIN-world scriptlets get no extension APIs, so a DOM attribute is
+        // how they learn the user has switched filtering off for this site.
+        try {
+          document.documentElement.setAttribute('data-sift-disabled', '');
+        } catch { /* detached document */ }
+        return;
+      }
 
       if (res.selectors && res.selectors.length) {
         injectStyle(

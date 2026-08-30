@@ -1,7 +1,11 @@
 # Headless browser profile created by tools/run_tests.py
 .test-profile/
 
+# AMO signing credentials - NEVER commit these.
+.amo-credentials.json
+
 # Packaged builds
+dist/
 *.xpi
 *.zip
 web-ext-artifacts/

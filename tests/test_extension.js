@@ -152,6 +152,18 @@ suite('extension: manifest', () => {
     equal(cs.run_at, 'document_start', 'must beat the parser to avoid an ad flash');
     equal(cs.all_frames, true, 'ads live in iframes');
   });
+
+  test('the YouTube scriptlet is registered in the MAIN world', () => {
+    const cs = manifest.content_scripts.find((c) => c.world === 'MAIN');
+    ok(cs, 'a MAIN-world content script exists');
+    equal(cs.run_at, 'document_start', 'must patch JSON.parse before the player loads');
+    ok(cs.matches.some((m) => m.includes('youtube.com')), 'scoped to YouTube');
+
+    // MAIN world in manifest content_scripts needs Firefox 128; it is also what
+    // exempts the script from YouTube's strict CSP.
+    const min = parseInt(manifest.browser_specific_settings.gecko.strict_min_version, 10);
+    ok(min >= 128, `strict_min_version is ${min}, MAIN world needs 128+`);
+  });
 });
 
 suite('extension: background startup', () => {
