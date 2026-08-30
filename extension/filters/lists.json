@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-08-30T17:48:40+00:00",
+  "lists": [
+    {
+      "id": "easylist",
+      "title": "EasyList",
+      "description": "The primary advertising filter list.",
+      "url": "https://easylist.to/easylist/easylist.txt",
+      "file": "easylist.txt",
+      "homepage": "https://easylist.to/",
+      "license": "GPL-3.0-or-later OR CC-BY-SA-3.0",
+      "version": "202608301732",
+      "expires": "4 days (update frequency)",
+      "bytes": 2113830,
+      "lines": 80640,
+      "rules": 80361,
+      "sha256": "8c902a459283cbfc2e297cb491e6dc63db87107fd98b1e99c2d76604ca0c443a",
+      "fetchedAt": "2026-08-30T17:48:39+00:00"
+    },
+    {
+      "id": "easyprivacy",
+      "title": "EasyPrivacy",
+      "description": "Tracking and telemetry filters.",
+      "url": "https://easylist.to/easylist/easyprivacy.txt",
+      "file": "easyprivacy.txt",
+      "homepage": "https://easylist.to/",
+      "license": "GPL-3.0-or-later OR CC-BY-SA-3.0",
+      "version": "202608301742",
+      "expires": "4 days (update frequency)",
+      "bytes": 1499725,
+      "lines": 56751,
+      "rules": 55981,
+      "sha256": "a10f3652e87e6b22d538f8c1fcbd79a4c6aa9b6a799aa57ae38555e1eb0801ca",
+      "fetchedAt": "2026-08-30T17:48:40+00:00"
+    }
+  ]
+}

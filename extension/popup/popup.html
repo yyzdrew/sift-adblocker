@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="dot" id="status-dot" aria-hidden="true"></span>
+      <span>Sift</span>
+    </div>
+    <button id="options-link" class="icon-btn" title="Open settings">Settings</button>
+  </header>
+
+  <section class="site">
+    <div class="site-row">
+      <div class="site-name" id="hostname">&nbsp;</div>
+      <label class="switch">
+        <input type="checkbox" id="site-toggle" checked>
+        <span class="slider" aria-hidden="true"></span>
+      </label>
+    </div>
+    <div class="site-state" id="site-state">Blocking on this site</div>
+  </section>
+
+  <section class="counts">
+    <div class="count">
+      <div class="count-value" id="page-count">0</div>
+      <div class="count-label">on this page</div>
+    </div>
+    <div class="count">
+      <div class="count-value" id="total-count">0</div>
+      <div class="count-label">all time</div>
+    </div>
+  </section>
+
+  <section class="recent" id="recent-section" hidden>
+    <div class="recent-head">Recently blocked</div>
+    <ul id="recent-list"></ul>
+  </section>
+
+  <div class="empty" id="empty-note" hidden></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sift Ad Blocker — Settings</title>
+<link rel="stylesheet" href="options.css">
+</head>
+<body>
+<main>
+  <h1>Sift Ad Blocker</h1>
+  <p class="lede" id="engine-summary">Loading…</p>
+
+  <section class="card">
+    <div class="row-between">
+      <div>
+        <h2>Blocking</h2>
+        <p class="hint" id="global-hint">Turn all filtering on or off.</p>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="global-toggle">
+        <span class="slider" aria-hidden="true"></span>
+      </label>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="row-between">
+      <div>
+        <h2>Filter lists</h2>
+        <p class="hint">
+          Shipped with the extension so blocking works offline from the first
+          run. Refreshing fetches the current version from the publisher.
+        </p>
+      </div>
+      <button id="refresh-btn" class="primary">Refresh lists</button>
+    </div>
+    <div id="refresh-status" class="status" hidden></div>
+    <div id="lists"></div>
+  </section>
+
+  <section class="card">
+    <h2>Custom rules</h2>
+    <p class="hint">
+      One rule per line, in EasyList syntax — the same parser the shipped lists
+      go through, so anything valid there works here.
+      Lines starting with <code>!</code> are comments.
+    </p>
+    <details class="examples">
+      <summary>Syntax examples</summary>
+      <table class="ex">
+        <tr><td><code>||ads.example.com^</code></td><td>block a domain and its subdomains</td></tr>
+        <tr><td><code>||example.com/ads/</code></td><td>block a path on one domain</td></tr>
+        <tr><td><code>/banner-*.gif</code></td><td>block a URL pattern anywhere (<code>*</code> is a wildcard)</td></tr>
+        <tr><td><code>||tracker.io^$third-party</code></td><td>only when loaded by another site</td></tr>
+        <tr><td><code>||cdn.io^$script,image</code></td><td>only these resource types</td></tr>
+        <tr><td><code>@@||example.com/ok.js</code></td><td>exception — never block this</td></tr>
+        <tr><td><code>example.com##.promo-box</code></td><td>hide an element on one site</td></tr>
+      </table>
+    </details>
+    <textarea id="custom-rules" spellcheck="false" rows="9"
+      placeholder="||ads.example.com^&#10;example.com##.sponsored-widget"></textarea>
+    <div class="row-between">
+      <div id="rules-feedback" class="status" hidden></div>
+      <button id="save-rules" class="primary">Save rules</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Whitelist</h2>
+    <p class="hint">
+      Sites where blocking is switched off. The per-site toggle in the popup
+      writes to this same list. A parent domain covers its subdomains.
+    </p>
+    <form id="whitelist-form" class="add-row">
+      <input type="text" id="whitelist-input" placeholder="example.com" spellcheck="false">
+      <button type="submit">Add</button>
+    </form>
+    <div id="whitelist-status" class="status" hidden></div>
+    <ul id="whitelist"></ul>
+  </section>
+
+  <section class="card">
+    <h2>Statistics</h2>
+    <div id="stats"></div>
+    <button id="reset-total" class="danger">Reset counter</button>
+  </section>
+</main>
+<script src="options.js"></script>
+</body>
+</html>

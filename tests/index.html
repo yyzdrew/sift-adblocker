@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ad Blocker tests</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    margin: 0; padding: 24px; background: #fbfbfc; color: #16181d;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background: #14161a; color: #e6e8ee; }
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .sub { opacity: .65; margin-bottom: 22px; font-size: 12px; }
+  h2 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .09em;
+    opacity: .55; margin: 26px 0 8px; font-weight: 600;
+  }
+  .case { white-space: pre-wrap; padding: 2px 0 2px 10px; border-left: 3px solid transparent; }
+  .pass { border-left-color: #2ea043; }
+  .fail { border-left-color: #e5484d; background: rgba(229,72,77,.09); padding-block: 6px; }
+  .note { white-space: pre-wrap; opacity: .62; font-size: 12px; padding-left: 10px; }
+  #summary {
+    margin-top: 30px; padding: 12px 16px; border-radius: 7px;
+    font-weight: 600; font-size: 14px;
+  }
+  #summary.ok  { background: rgba(46,160,67,.14); color: #1a7f37; }
+  #summary.bad { background: rgba(229,72,77,.14); color: #cf222e; }
+  @media (prefers-color-scheme: dark) {
+    #summary.ok  { color: #56d364; }
+    #summary.bad { color: #ff7b72; }
+  }
+  #done { opacity: 0; height: 0; }
+  #error { color: #cf222e; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>Ad Blocker test suite</h1>
+<div class="sub">
+  Serve this directory and open it: <code>py -m http.server 8000</code> from the
+  project root, then <code>http://localhost:8000/tests/</code>.
+  ES modules need a real origin, so <code>file://</code> will not work.
+</div>
+<div id="results"></div>
+<div id="error"></div>
+
+<script type="module">
+  import { runAll, report } from './runner.js';
+
+  try {
+    // Import order sets the display order of the suites.
+    await import('./test_tokenizer.js');
+    await import('./test_parser.js');
+    await import('./test_engine.js');
+    await import('./test_lists.js');
+    await import('./test_extension.js');
+    await runAll(document.getElementById('results'));
+  } catch (err) {
+    document.title = 'FAIL load';
+    document.getElementById('error').textContent =
+      'Failed to load test modules:\n' + (err && err.stack ? err.stack : err);
+    const d = document.createElement('div');
+    d.id = 'done';
+    d.textContent = 'DONE-FAIL';
+    document.body.appendChild(d);
+    await report({ error: String(err && err.stack ? err.stack : err) });
+  }
+</script>
+</body>
+</html>

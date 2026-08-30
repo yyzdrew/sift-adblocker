@@ -1,0 +1,9 @@
+# Keep everything LF in the repo.
+#
+# This matters for extension/filters/*.txt specifically: the sha256 recorded in
+# filters/lists.json is computed over LF-normalised text by tools/update_lists.py,
+# and letting Git rewrite those files to CRLF on checkout would make the recorded
+# checksums describe content that is not what is on disk.
+* text=auto eol=lf
+
+*.png binary

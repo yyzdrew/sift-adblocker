@@ -1,0 +1,26 @@
+# Headless browser profile created by tools/run_tests.py
+.test-profile/
+
+# Packaged builds
+*.xpi
+*.zip
+web-ext-artifacts/
+
+# Editors / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Claude Code scratch worktrees
+.claude/
+
+# ---------------------------------------------------------------------------
+# NOT ignored, deliberately: extension/filters/*.txt
+#
+# The EasyList and EasyPrivacy snapshots are committed on purpose. They are
+# what makes the extension work offline on a first run, with no network call
+# and nothing to fetch before it starts blocking. Re-vendor them with
+# `py tools/update_lists.py`.
+# ---------------------------------------------------------------------------
